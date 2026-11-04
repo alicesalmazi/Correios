@@ -1,5 +1,5 @@
 """
-arvoreb.py - Arvore B de ordem m (caderno do aluno, secao 7.3).
+arvoreb.py - Arvore B de ordem m
 
 Ordem m = maximo de filhos por no (m >= 3). Cada no tem no maximo m-1 chaves
 e, exceto a raiz, no minimo ceil(m/2)-1. A insercao desce ate a folha
