@@ -1,0 +1,241 @@
+// Listas/Categorias
+{
+    "embalagem": [
+        "PACOTE",
+        "PACOTE PEQUENO",
+        "PACOTE GRANDE",
+        "CAIXA",
+        "CAIXA PEQUENA",
+        "CAIXA GRANDE",
+        "CARTA",
+        "ENVELOPE",
+        "VR"
+    ],
+    "transportadoras": [
+        "CORREIOS",
+        "MERCADO LIVRE",
+        "SHOPEE",
+        "AMAZON",
+        "ANJUN",
+        "ALIEXPRESS",
+        "OBOTICÁRIO",
+        "BRITÂNIA",
+        "CPB",
+        "ELETROLUX",
+        "FERRO",
+        "FM",
+        "GFL",
+        "GROWTH",
+        "UNILOG",
+        "IMILE",
+        "INSIDER",
+        "JET",
+        "LEVIS",
+        "LOGAN",
+        "MAGALOG",
+        "MAGALU",
+        "MONDIAL",
+        "NETSHOES",
+        "PRIMEAIR",
+        "PRIVALIA",
+        "RIACHUELO",
+        "SHEIN",
+        "SMART",
+        "TIKTOK SHOP",
+        "TOTAL",
+        "TV",
+        "VR",
+        "WEPINK",
+        "YOUCOM",
+        "JADLOG",
+        "LOGGI",
+        "ZARA",
+        "RENNER",
+        "TEMU",
+        "DANFE",
+        "ULTRAFARMA",
+        "C&A",
+        "CACAU SHOW",
+        "CENTAURO",
+        "BRASPRESS",
+        "JET MERCADO LIVRE"
+    ],
+    "categoriaPublico": [
+        "ALUNO INTERNO",
+        "ALUNO EXTERNO",
+        "EXTERNO",
+        "FUNCIONÁRIO INTERNO",
+        "FUNCIONÁRIO RESIDENTE",
+        "FUNCIONÁRIO EXTERNO",
+        "DEPARTAMENTOS",
+        "CANTINA",
+        "REITORIA",
+        "JURÍDICO"
+    ],
+    "status": [
+        "AGUARDANDO_CHEGADA",
+        "RECEBIDO",
+        "DISPONIVEL_PARA_RETIRADA",
+        "RETIRADO",
+        "CANCELADO"
+    ],
+    "statusRetirada": [
+        "PENDENTE",
+        "CONCLUIDO"
+    ],
+    "autorizacaoEmail": [
+        "SIM",
+        "NÃO"
+    ],
+    "tipoRecurso": [
+        "prateleira_estoque",
+        "escaninho",
+        "armario_seguro",
+        "mesa_triagem"
+    ]
+}
+
+Prioridades:
+    {
+        "prioridade": 1,
+        "solicitante": [
+            "DEPARTAMENTOS",
+            "CANTINA",
+            "REITORIA",
+            "JURÍDICO"
+        ],
+        "descricao": "Encomendas institucionais urgentes, materiais de aula ou documentos oficiais da administração."
+    },
+    {
+        "prioridade": 2,
+        "solicitante": [
+            "ALUNO INTERNO"
+        ],
+        "descricao": "Encomendas de uso quotidiano para os alunos internos (público-alvo principal do setor)."
+    },
+    {
+        "prioridade": 3,
+        "solicitante": [
+            "FUNCIONÁRIO INTERNO",
+            "FUNCIONÁRIO RESIDENTE",
+            "FUNCIONÁRIO EXTERNO"
+        ],
+        "descricao": "Pacotes destinados a professores ou colaboradores que residem no campus."
+    },
+    {
+        "prioridade": 4,
+        "solicitante": [
+            "ALUNO EXTERNO",
+            "EXTERNO"
+        ],
+        "descricao": "Alunos externos ou entregas gerais sem urgência."
+    }
+
+//Caderno de Bordo
+'''
+
+Grupo criado em: "12/10/2026"
+Integrantes:
+Pedro Augusto Alexandre da Silva, 
+Marcos Filipe Santos Araujo, 
+Alice Maria da Silva Salmazi, 
+Lucas Teixeira
+
+Observação: Grupo anteriormente composto por um integrante que trancou o curso e substítuido posteriomente pelo Lucas (por isso nas primeiras etapas não encontramos ele)
+
+Primeiro passo: 12/10/2026
+Criação do grupo e separação das ideias, definição do setor utilizado.
+
+
+Módulo 1: E1
+
+Uso de IA.
+Para estruturar o sistema em formato JSON / Dicionário:
+
+"Como estruturar isso para um sistema de recebimento de mercadoria do UNASP contendo as categorias: Nº da Etiqueta, Número de cadastro, Embalagem, Transportadora, Destinatário, Status, Categoria de Público, Data de Chegada, Data de Retirada, Retirado Por, Observações, além de palavra-chave, destinatário, previsão de entrega e situação? Monte em formato de dicionário/JSON."
+
+Resposta:
+1. Estrutura JSON do Sistema (com os campos combinados)
+JSON
+{
+  "numero_etiqueta": "ETQ-2026-001",
+  "numero_cadastro": "CAD-10023",
+  "embalagem": "PACOTE PEQUENO",
+  "transportadora": "CORREIOS",
+  "destinatario": {
+    "nome": "João Silva",
+    "categoria_publico": "ALUNO INTERNO"
+  },
+  "status": "DISPONIVEL_PARA_RETIRADA",
+  "data_chegada": "2026-11-03T09:30:00Z",
+  "data_retirada": "2026-11-03T14:15:00Z",
+  "retirado_por": "João Silva",
+  "observacoes": "Caixa um pouco amassada no canto superior."
+}
+
+Para integrar o conceito de Recurso e Reserva (como nos modelos institucionais):
+
+"Como adaptar essa estrutura de recebimento de mercadorias para incluir o conceito de Recurso (o espaço físico/estoque) e Reserva (o pedido/encomenda vinculada), aplicando as categorias e palavras-chave?"
+
+Resposta:
+2. Modelo de Recurso e Reserva (separados)
+JSON
+{
+  "codigo": "PRAT-A-01",
+  "nome": "Prateleira A - Alunos Internos",
+  "tipo": "prateleira_estoque",
+  "capacidade": 20,
+  "categoria_publico": "ALUNO INTERNO",
+  "local": "estoque_setor_correios",
+  "observacoes": "Destinado a pacotes pequenos e médios para alunos internos"
+}
+
+JSON
+{
+  "id": 1024,
+  "recurso": "PRAT-A-01",
+  "destinatario": "João Silva",
+  "numero_cadastro": "CAD-10023",
+  "palavra_chave": "LIVROS_TEOLOGIA",
+  "transportadora": "MERCADO LIVRE",
+  "embalagem": "PACOTE PEQUENO",
+  "previsao_entrega": "2026-11-05",
+  "observacao_item_nf": "NF-129482 / 2x Livros",
+  "status": "aguardando_chegada"
+}
+
+Para extrair os domínios de dados (listas de opções, transportadoras e embalagens):
+
+"Liste o que cada variável pode retornar em formato de lista em Python (como a lista completa de transportadoras, embalagens, tipos de recintos e status)."
+
+Reposta:
+
+embalagem:
+PACOTE, PACOTE PEQUENO, PACOTE GRANDE, CAIXA, CAIXA PEQUENA, CAIXA GRANDE, CARTA, ENVELOPE, VR.   
+
+transportadora:
+CORREIOS, MERCADO LIVRE, SHOPEE, AMAZON, ANJUN, ALIEXPRESS, OBOTICÁRIO, BRITÂNIA, CPB, ELETROLUX, FERRO, FM, GFL, GROWTH, UNILOG, IMILE, INSIDER, JET, LEVIS, LOGAN, MAGALOG, MAGALU, MONDIAL, NETSHOES, PRIMEAIR, PRIVALIA, RIACHUELO, SHEIN, SMART, TIKTOK SHOP, TOTAL, TV, VR, WEPINK, YOUCOM, JADLOG, LOGGI, ZARA, RENNER, TEMU, DANFE, ULTRAFARMA, C&A, CACAU SHOW, CENTAURO, BRASPRESS, JET MERCADO LIVRE.   
+
+categoriaPublico:
+ALUNO INTERNO, ALUNO EXTERNO, EXTERNO, FUNCIONÁRIO INTERNO, FUNCIONÁRIO RESIDENTE, FUNCIONÁRIO EXTERNO, DEPARTAMENTOS, CANTINA, REITORIA, JURÍDICO.   
+
+status:AGUARDANDO_CHEGADA, RECEBIDO, DISPONIVEL_PARA_RETIRADA, RETIRADO, CANCELADO
+
+Para criar e adaptar a política de prioridades baseada em classes:
+
+"Como criar uma classe de prioridade (solicitante_tipo e prioridade) adaptada para o sistema de Correios do UNASP, considerando o tipo de público, o tamanho da embalagem e a organização do estoque em lista de dicionários?"
+
+Resposta:
+escala_prioridades = {
+    "aula regular": 1,
+    "evento institucional": 2,
+    "projeto ou extensão": 3,
+    "uso livre": 4
+}
+
+
+Integrantes:
+Alice - organização da estrutura JSon e diario de Bordo
+Marcos e Pedro - Levantamento presencial e acompanhamkento da jornada no departamento, coleta de todos os dados, conversa com a diretora do setor 13/10/2026.
+
+'''
