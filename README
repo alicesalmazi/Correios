@@ -73,11 +73,8 @@
         "JURÍDICO"
     ],
     "status": [
-        "AGUARDANDO_CHEGADA",
-        "RECEBIDO",
-        "DISPONIVEL_PARA_RETIRADA",
-        "RETIRADO",
-        "CANCELADO"
+        "ENTREGUE",
+        "AGUARDANDO"
     ],
     "statusRetirada": [
         "PENDENTE",
@@ -237,5 +234,25 @@ escala_prioridades = {
 Integrantes:
 Alice - organização da estrutura JSon e diario de Bordo
 Marcos e Pedro - Levantamento presencial e acompanhamkento da jornada no departamento, coleta de todos os dados, conversa com a diretora do setor 13/10/2026.
-
+janela de acompanheamneto foi realizado no dia  20/10 manhã e 16/10 tarde
+mas por conta do número não ser possivel de base, foi encaminhado uma planlha sem a identificação dos alunos para uso.
 '''
+
+Módulo E2 E3:
+Acabamos entragando as duas etapas juntas no modulo 3 já que não conheseguimos nos organizar e também pela troca de um integrante (líder do grupo)
+
+Divisão 
+tads.py Lucas
+arvore.py Marcos
+heap. Pedro
+base carregada Alice
+
+em preparação para entrega e4 
+a alice revisou os arquivos para estraem conforme com o pedido com professor além de organizar base e outrso arquivos de entega junto com o diario de bordo.
+Meninos revisaram o código e adicionaram:
+
+Uso da nossa TAD (tads.py) em vez de lista padrão: O professor não quer que usemos lista nativa do Python crua ([]) por baixo do capô no Heap se temos a nossa própria estrutura. Precisamos usar a nossa TAD de lista (como os métodos de inserir, obter, modificar e a propriedade de tamanho).   Propriedade de tamanho em vez de len(): Não devemos chamar len(self.elementos) diretamente, mas sim usar a propriedade de tamanho que já existe na nossa TAD.   Nome do arquivo minúsculo: O arquivo tem que se chamar obrigatoriamente heap.py (tudo minúsculo).   Métricas separadas (Comparações vs. Trocas): O código atual usa um contador genérico self.operacoes. O professor exige variáveis separadas: uma exclusiva para comparações e outra exclusiva para trocas (swaps).   Método coerente() obrigatório: Precisamos adicionar o método coerente() na classe MinHeap para validar se a propriedade de heap está sendo respeitada em toda a estrutura. O edital diz que um invariante testado vale mais que um código que só parece certo.   Função k_menores_com_heap(itens, k): O enunciado exige essa função específica para extrair os $k$ primeiros elementos usando o heap sem precisar ordenar a lista inteira. 
+
+1. Classe única Arvore com o parâmetro balanceada. Um único código onde balanceada=False funciona como uma BST comum e balanceada=True ativa as rotações automáticas da AVL na inserção. 
+2. Métodos principais: inserir(chave, reserva), faixa(inicio, fim), predecessor(chave), caminho_medio(), em_ordem_com_pilha(), em_largura_com_fila() (
+3. Método coerente() validando o invariante de BST e o fator de balanceamento AVL.

@@ -1,0 +1,60 @@
+[
+  {
+    "codigoRecurso": "PRAT-A-01",
+    "nomeRecurso": "Prateleira A",
+    "tipoRecurso": "prateleira_estoque",
+    "tamanhos": ["CAIXA PEQUENA", "PACOTE", "ENVELOPE"],
+    "solicitantePermitido": ["DEPARTAMENTOS", "REITORIA", "JURÍDICO", "CANTNA"],
+    "capacidade": 20,
+    "prioridade": 1,
+    "local": "estoque_correios",
+    "observacoesRecurso": "Espaço reservado para itens institucionais urgentes de tamanho médio/pequeno.",
+    "itemVinculado": []
+  },
+
+  {
+    "codigoRecurso": "PRAT-P2-01",
+    "nomeRecurso": "Prateleira B1",
+    "tipoRecurso": "prateleira_estoque",
+    "prioridade": 2,
+    "solicitantePermitido": [
+      "ALUNO INTERNO"
+    ],
+    "tamanhos": ["PACOTE PEQUENO", "PACOTE GRANDE", "CAIXA PEQUENA"],
+    "capacidade": 30,
+    "local": "estoque_correios",
+    "observacoesRecurso": "Fluxo principal de atendimento aos alunos residentes no campus.",
+    "itemVinculado": []
+  },
+  {
+    "codigoRecurso": "PRAT-P3-01",
+    "nomeRecurso": "Prateleira C",
+    "tipoRecurso": "prateleira_estoque",
+    "prioridade": 3,
+    "solicitantePermitido": [
+      "FUNCIONÁRIO INTERNO",
+      "FUNCIONÁRIO RESIDENTE",
+      "FUNCIONÁRIO EXTERNO"
+    ],
+    "tamanhos": ["PACOTE PEQUENO", "CAIXA PEQUENA", "ENVELOPE"],
+    "capacidade": 25,
+    "local": "estoque_correios",
+    "observacoesRecurso": "Destinado ao corpo docente e administrativo.",
+    "itemVinculado": []
+  },
+  {
+    "codigoRecurso": "PRAT-P4-01",
+    "nomeRecurso": "Prateleira D",
+    "tipoRecurso": "prateleira_estoque",
+    "prioridade": 4,
+    "solicitantePermitido": [
+      "ALUNO EXTERNO",
+      "EXTERNO"
+    ],
+    "tamanhos": ["PACOTE PEQUENO", "CAIXA PEQUENA", "ENVELOPE", "PACOTE GRANDE"],
+    "capacidade": 40,
+    "local": "estoque_correios",
+    "observacoesRecurso": "Encomendas gerais sem urgência imediata de retenção.",
+    "itemVinculado": []
+  }
+]

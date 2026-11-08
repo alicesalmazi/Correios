@@ -1,24 +1,24 @@
 {
-  "numEtiqueta": "ETQ-2026-001",
-  "numCadastro": "CAD-10023",
-  "embalagem": "PACOTE PEQUENO",
-  "transportadora": "CORREIOS",
+  "numEtiqueta": "",
+  "numCadastro": "",
+  "embalagem": "",
+  "transportadora": "",
   "destinatario": {
-    "nome": "João Silva",
-    "categoriaPublico": "ALUNO INTERNO"
+    "nome": "",
+    "categoriaPublico": ""
   },
-  "status": "DISPONIVEL_PARA_RETIRADA",
-  "dataChegada": "2026-11-03T09:30:00Z",
+  "status": "",
+  "dataChegada": "",
   "retirada": {
-    "retiradoPor": "João Silva",
+    "retiradoPor": "",
     "parentesco": "",
-    "statusRetirada": "CONCLUIDO",
-    "autorizacaoEmail": "SIM",
-    "dataRetirada": "2026-11-03T14:15:00Z"
+    "statusRetirada": "",
+    "autorizacaoEmail": "",
+    "dataRetirada": ""
   },
   "detalhamento": {
-    "observacoes": "Caixa um pouco amassada no canto superior.",
-    "dataPrevistaChegada": "2026-11-03T14:15:00Z",
-    "palavraChave": "CASA"
+    "observacoes": "",
+    "dataPrevistaChegada": "",
+    "palavraChave": ""
   }
 }
