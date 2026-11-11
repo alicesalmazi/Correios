@@ -148,9 +148,11 @@ class ArvoreB:
             contadas += k
             if k > self.m - 1 or len(no.cargas) != k:
                 return False
+            if any(not isinstance(cargas, list) or not cargas for cargas in no.cargas):
+                return False
             if no is not self.raiz and k < minimo:
                 return False
-            if no is self.raiz and k == 0 and self.n_chaves != 0:
+            if no is self.raiz and k == 0 and (self.n_chaves != 0 or not no.folha):
                 return False
             for i in range(k):
                 if i > 0 and no.chaves[i] <= no.chaves[i - 1]:

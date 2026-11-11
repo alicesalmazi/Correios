@@ -1,191 +1,248 @@
-"""
-arvoreb.py - Arvore B de ordem m
+"""Arvore binaria de busca, com balanceamento AVL opcional."""
 
-Ordem m = maximo de filhos por no (m >= 3). Cada no tem no maximo m-1 chaves
-e, exceto a raiz, no minimo ceil(m/2)-1. A insercao desce ate a folha
-guardando o caminho na Pilha do grupo, insere, e sobe dividindo todo no que
-passar de m-1 chaves. Chaves repetidas acumulam na lista de cargas.
-Contador principal: nos visitados (cada no e um bloco de disco).
-Nao usa bisect, dict nem sorted.
-"""
-
-from tads import Pilha
+from tads import Fila, Pilha
+from arvoreb import ArvoreB, NoB
 
 
-class NoB:
-    def __init__(self, folha=True):
-        self.chaves = []
-        self.cargas = []    # cargas[i] = lista de cargas da chaves[i]
-        self.filhos = []    # vazio nas folhas; len(chaves)+1 nos internos
-        self.folha = folha
+class No:
+    def __init__(self, chave, carga):
+        self.chave = chave
+        self.cargas = [carga]
+        self.esquerda = None
+        self.direita = None
+        self.altura = 1
 
 
-class ArvoreB:
-    def __init__(self, m=3):
-        if m < 3:
-            raise ValueError("ordem m deve ser >= 3")
-        self.m = m
-        self.raiz = NoB()
+class Arvore:
+    def __init__(self, balanceada=False):
+        self.balanceada = balanceada
+        self.raiz = None
+        self.comparacoes = 0
+        self.rotacoes = 0
+        self.n_nos = 0
         self.n_chaves = 0
-        self.divisoes = 0         # acumulado das insercoes
-        self.nos_visitados = 0    # acumulado das insercoes
 
-    # ---- insercao -----------------------------------------------------------
+    @staticmethod
+    def _altura(no):
+        return no.altura if no is not None else 0
+
+    @classmethod
+    def _atualizar_altura(cls, no):
+        no.altura = 1 + max(cls._altura(no.esquerda), cls._altura(no.direita))
+
+    @classmethod
+    def _fator_balanceamento(cls, no):
+        return cls._altura(no.esquerda) - cls._altura(no.direita)
+
+    def _rotacionar_direita(self, raiz):
+        nova_raiz = raiz.esquerda
+        raiz.esquerda = nova_raiz.direita
+        nova_raiz.direita = raiz
+        self._atualizar_altura(raiz)
+        self._atualizar_altura(nova_raiz)
+        self.rotacoes += 1
+        return nova_raiz
+
+    def _rotacionar_esquerda(self, raiz):
+        nova_raiz = raiz.direita
+        raiz.direita = nova_raiz.esquerda
+        nova_raiz.esquerda = raiz
+        self._atualizar_altura(raiz)
+        self._atualizar_altura(nova_raiz)
+        self.rotacoes += 1
+        return nova_raiz
+
+    def _rebalancear(self, no):
+        fator = self._fator_balanceamento(no)
+        if fator > 1:
+            if self._fator_balanceamento(no.esquerda) < 0:
+                no.esquerda = self._rotacionar_esquerda(no.esquerda)
+            return self._rotacionar_direita(no)
+        if fator < -1:
+            if self._fator_balanceamento(no.direita) > 0:
+                no.direita = self._rotacionar_direita(no.direita)
+            return self._rotacionar_esquerda(no)
+        return no
+
     def inserir(self, chave, carga):
-        pilha, no = Pilha(), self.raiz
-        while True:
-            self.nos_visitados += 1
-            i = 0
-            while i < len(no.chaves):
-                if chave == no.chaves[i]:
-                    no.cargas[i].append(carga)
-                    return
-                if chave < no.chaves[i]:
-                    break
-                i += 1
-            if no.folha:
-                break
-            pilha.empilhar((no, i))
-            no = no.filhos[i]
-        no.chaves.insert(i, chave)
-        no.cargas.insert(i, [carga])
-        self.n_chaves += 1
-        # sobe dividindo todo no que passou de m-1 chaves
-        while len(no.chaves) > self.m - 1:
-            meio = len(no.chaves) // 2
-            direita = NoB(folha=no.folha)
-            direita.chaves = no.chaves[meio + 1:]
-            direita.cargas = no.cargas[meio + 1:]
-            if not no.folha:
-                direita.filhos = no.filhos[meio + 1:]
-                no.filhos = no.filhos[:meio + 1]
-            sobe_chave, sobe_carga = no.chaves[meio], no.cargas[meio]
-            no.chaves, no.cargas = no.chaves[:meio], no.cargas[:meio]
-            self.divisoes += 1
-            if pilha.vazia():
-                nova = NoB(folha=False)
-                nova.chaves, nova.cargas = [sobe_chave], [sobe_carga]
-                nova.filhos = [no, direita]
-                self.raiz = nova
+        if self.raiz is None:
+            self.raiz = No(chave, carga)
+            self.n_nos = 1
+            self.n_chaves = 1
+            return
+
+        caminho = []
+        no = self.raiz
+        while no is not None:
+            self.comparacoes += 1
+            if chave == no.chave:
+                no.cargas.append(carga)
                 return
-            pai, j = pilha.desempilhar()
-            pai.chaves.insert(j, sobe_chave)
-            pai.cargas.insert(j, sobe_carga)
-            pai.filhos.insert(j + 1, direita)
-            no = pai
 
-    # ---- busca --------------------------------------------------------------
+            self.comparacoes += 1
+            if chave < no.chave:
+                caminho.append((no, "esquerda"))
+                if no.esquerda is None:
+                    no.esquerda = No(chave, carga)
+                    break
+                no = no.esquerda
+            else:
+                caminho.append((no, "direita"))
+                if no.direita is None:
+                    no.direita = No(chave, carga)
+                    break
+                no = no.direita
+
+        self.n_nos += 1
+        self.n_chaves += 1
+        for indice in range(len(caminho) - 1, -1, -1):
+            atual = caminho[indice][0]
+            self._atualizar_altura(atual)
+            if self.balanceada:
+                nova_raiz = self._rebalancear(atual)
+                if indice == 0:
+                    self.raiz = nova_raiz
+                else:
+                    pai, lado = caminho[indice - 1]
+                    setattr(pai, lado, nova_raiz)
+
     def buscar(self, chave):
-        """Devolve (cargas, nos_visitados_desta_busca)."""
-        visitados, no = 0, self.raiz
-        while True:
-            visitados += 1
-            i = 0
-            while i < len(no.chaves) and chave > no.chaves[i]:
-                i += 1
-            if i < len(no.chaves) and chave == no.chaves[i]:
-                return no.cargas[i], visitados
-            if no.folha:
-                return [], visitados
-            no = no.filhos[i]
+        comparacoes_iniciais = self.comparacoes
+        no = self.raiz
+        while no is not None:
+            self.comparacoes += 1
+            if chave == no.chave:
+                return no.cargas, self.comparacoes - comparacoes_iniciais
+            self.comparacoes += 1
+            no = no.esquerda if chave < no.chave else no.direita
+        return [], self.comparacoes - comparacoes_iniciais
 
-    # ---- estatisticas -------------------------------------------------------
-    def altura(self):
-        """Numero de niveis (so a raiz = 1)."""
-        h, no = 1, self.raiz
-        while not no.folha:
-            no = no.filhos[0]
-            h += 1
-        return h
+    def faixa(self, inicio, fim):
+        cargas = []
+        visitados = 0
+        self.comparacoes += 1
+        if inicio > fim:
+            return cargas, visitados
 
-    def contar_nos(self):
-        total, pilha = 0, Pilha()
-        pilha.empilhar(self.raiz)
-        while not pilha.vazia():
+        pilha = Pilha()
+        no = self.raiz
+        while no is not None or not pilha.vazia():
+            while no is not None:
+                visitados += 1
+                self.comparacoes += 1
+                if no.chave >= inicio:
+                    pilha.empilhar(no)
+                    no = no.esquerda
+                else:
+                    no = no.direita
+
+            if pilha.vazia():
+                break
             no = pilha.desempilhar()
-            total += 1
-            for f in no.filhos:
-                pilha.empilhar(f)
-        return total
+            self.comparacoes += 1
+            if no.chave > fim:
+                break
+            cargas.extend(no.cargas)
+            no = no.direita
+        return cargas, visitados
 
-    def ocupacao_media(self):
-        """Fracao media de chaves por no em relacao ao maximo (m-1), de 0 a 1."""
-        nos = self.contar_nos()
-        return self.n_chaves / (nos * (self.m - 1))
+    def predecessor(self, chave):
+        candidato = None
+        no = self.raiz
+        while no is not None:
+            self.comparacoes += 1
+            if no.chave < chave:
+                candidato = no
+                no = no.direita
+            else:
+                no = no.esquerda
+        return candidato.chave if candidato is not None else None
 
-    # ---- percurso -----------------------------------------------------------
-    def em_ordem(self):
-        """Lista de (chave, cargas) em ordem crescente, iterativo com Pilha.
-        Mesmo formato de Arvore.em_ordem_com_pilha(), para conferir com a AVL."""
-        saida, pilha = [], Pilha()
-        pilha.empilhar((self.raiz, None))
-        while not pilha.vazia():
-            no, i = pilha.desempilhar()
-            if i is not None:                  # emitir a chave i do no
-                saida.append((no.chaves[i], no.cargas[i]))
-            elif no.folha:
-                for k in range(len(no.chaves)):
-                    saida.append((no.chaves[k], no.cargas[k]))
-            else:                              # empilha em ordem inversa
-                for k in range(len(no.chaves) - 1, -1, -1):
-                    pilha.empilhar((no.filhos[k + 1], None))
-                    pilha.empilhar((no, k))
-                pilha.empilhar((no.filhos[0], None))
+    def altura(self):
+        return self._altura(self.raiz)
+
+    def caminho_medio(self):
+        if self.n_nos == 0:
+            return 0
+
+        soma_niveis = 0
+        fila = Fila()
+        fila.enfileirar((self.raiz, 1))
+        while not fila.vazia():
+            no, nivel = fila.desenfileirar()
+            soma_niveis += nivel
+            if no.esquerda is not None:
+                fila.enfileirar((no.esquerda, nivel + 1))
+            if no.direita is not None:
+                fila.enfileirar((no.direita, nivel + 1))
+        return soma_niveis / self.n_nos
+
+    def em_ordem_com_pilha(self):
+        saida = []
+        pilha = Pilha()
+        no = self.raiz
+        while no is not None or not pilha.vazia():
+            while no is not None:
+                pilha.empilhar(no)
+                no = no.esquerda
+            no = pilha.desempilhar()
+            saida.append((no.chave, no.cargas))
+            no = no.direita
         return saida
 
-    # ---- invariantes --------------------------------------------------------
+    def em_largura_com_fila(self):
+        saida = []
+        if self.raiz is None:
+            return saida
+
+        fila = Fila()
+        fila.enfileirar(self.raiz)
+        while not fila.vazia():
+            no = fila.desenfileirar()
+            saida.append((no.chave, no.cargas))
+            if no.esquerda is not None:
+                fila.enfileirar(no.esquerda)
+            if no.direita is not None:
+                fila.enfileirar(no.direita)
+        return saida
+
     def coerente(self):
-        """True se: chaves estritamente crescentes em cada no e dentro dos
-        limites herdados; ocupacao entre ceil(m/2)-1 e m-1 (raiz: >= 1 chave,
-        exceto arvore vazia); filhos = chaves+1; TODAS as folhas no mesmo
-        nivel; contador de chaves correto."""
-        minimo = (self.m - 1) // 2
-        nivel_folhas, contadas, pilha = None, 0, Pilha()
-        pilha.empilhar((self.raiz, 1, None, None))
+        contagem, pilha = 0, Pilha()
+        pilha.empilhar((self.raiz, None, None))
         while not pilha.vazia():
-            no, nivel, lo, hi = pilha.desempilhar()
-            k = len(no.chaves)
-            contadas += k
-            if k > self.m - 1 or len(no.cargas) != k:
+            no, limite_inferior, limite_superior = pilha.desempilhar()
+            if no is None:
+                continue
+            contagem += 1
+
+            if not no.cargas:
                 return False
-            if no is not self.raiz and k < minimo:
+            if limite_inferior is not None and no.chave <= limite_inferior:
                 return False
-            if no is self.raiz and k == 0 and self.n_chaves != 0:
+            if limite_superior is not None and no.chave >= limite_superior:
                 return False
-            for i in range(k):
-                if i > 0 and no.chaves[i] <= no.chaves[i - 1]:
-                    return False
-                if lo is not None and no.chaves[i] <= lo:
-                    return False
-                if hi is not None and no.chaves[i] >= hi:
-                    return False
-            if no.folha:
-                if no.filhos:
-                    return False
-                if nivel_folhas is None:
-                    nivel_folhas = nivel
-                elif nivel != nivel_folhas:
-                    return False
-            else:
-                if len(no.filhos) != k + 1:
-                    return False
-                for i, f in enumerate(no.filhos):
-                    l2 = no.chaves[i - 1] if i > 0 else lo
-                    h2 = no.chaves[i] if i < k else hi
-                    pilha.empilhar((f, nivel + 1, l2, h2))
-        return contadas == self.n_chaves
+
+            altura_esquerda = self._altura(no.esquerda)
+            altura_direita = self._altura(no.direita)
+            if no.altura != 1 + max(altura_esquerda, altura_direita):
+                return False
+            if self.balanceada and abs(altura_esquerda - altura_direita) > 1:
+                return False
+
+            pilha.empilhar((no.esquerda, limite_inferior, no.chave))
+            pilha.empilhar((no.direita, no.chave, limite_superior))
+
+        return contagem == self.n_nos == self.n_chaves
 
 
-# --------------------------------------------------------------------------
-# VERIFICACAO (secao 7.7): unico lugar onde sorted() e listas simples entram.
-# --------------------------------------------------------------------------
 def verificar_contra_lista(arvore, reservas, campo="inicio"):
-    chaves = sorted({r[campo] for r in reservas})
-    pares = arvore.em_ordem()
-    if [c for c, _ in pares] != chaves:
+    chaves = sorted({reserva[campo] for reserva in reservas})
+    pares = arvore.em_ordem_com_pilha()
+    if [chave for chave, _ in pares] != chaves:
         return False
-    for c in chaves:
-        esperado = [r for r in reservas if r[campo] == c]
-        if sorted(map(id, arvore.buscar(c)[0])) != sorted(map(id, esperado)):
+    for chave in chaves:
+        esperado = [reserva for reserva in reservas if reserva[campo] == chave]
+        cargas, _ = arvore.buscar(chave)
+        if sorted(map(id, cargas)) != sorted(map(id, esperado)):
             return False
     return arvore.coerente()
