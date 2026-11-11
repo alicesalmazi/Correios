@@ -19,7 +19,6 @@
     "local": "estoque_correios",
     "observacoesRecurso": "Espaço reservado para itens institucionais urgentes de tamanho médio/pequeno.",
     "itemVinculado": [
-      "2"
     ]
   },
   {
@@ -79,7 +78,6 @@
     "local": "estoque_correios",
     "observacoesRecurso": "Encomendas gerais sem urgência imediata de retenção.",
     "itemVinculado": [
-      "2"
     ]
   }
 ]

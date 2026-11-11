@@ -309,3 +309,6 @@ Opção 5: Varredura no inventario.json calculando dinamicamente capacidade máx
 Opção 7: Injeção da instância historico_acoes = Pilha() no ciclo do menu, utilizando .empilhar() nas transações bem-sucedidas e .desempilhar() para acionar o método gerenciador.remover() de forma segura e orientada a TAD.
 
 Opções 9, 10 e 11: Consolidação das métricas do MinHeap, varredura de integridade de capacidade por prateleira e rotina de escrita I/O gerando o arquivo relatorio_desempenho.txt.
+
+Marcos: arvoreb.py
+Adaptamos a lista de espera do §7.4: no nosso setor o recurso disputado é a prateleira, não o horário. A fila de espera contém apenas encomendas ENTREGUE sem alocação — as AGUARDANDO não disputam prateleira porque ainda não chegaram fisicamente. A comparação FIFO × Heap mede qual encomenda é alocada primeiro quando uma vaga abre."

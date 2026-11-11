@@ -244,6 +244,78 @@ class Cadastro:
 
         return True, f"✅ Item {num_etiqueta} alocado com sucesso na prateleira {codigo_recurso}!"
 
+    def remover_item_da_prateleira(self, num_etiqueta):
+        dados_inventario = self._ler_json(self.recurso)
+        removido = False
+
+        for rec in dados_inventario:
+            itens = rec.get("itemVinculado", [])
+            if num_etiqueta in itens:
+                itens.remove(num_etiqueta)
+                rec["itemVinculado"] = itens
+                removido = True
+
+        if removido:
+            with open(self.recurso, "w", encoding="utf-8") as f:
+                json.dump(dados_inventario, f, indent=2, ensure_ascii=False)
+
+        return removido
+
+    def buscar_pedido(self, etiqueta):
+        alvo = str(etiqueta).strip().upper()
+        for p in self.carregar_dados():
+            if str(p.get("numEtiqueta", "")).strip().upper() == alvo:
+                return p
+        return None
+
+    def buscar_recurso(self, codigo):
+        alvo = str(codigo).strip().upper()
+        for r in self._ler_json(self.recurso):
+            if str(r.get("codigoRecurso", "")).strip().upper() == alvo:
+                return r
+        return None
+
+    def prateleiras_do_item(self, num_etiqueta):
+        alvo = str(num_etiqueta).strip().upper()
+        return [
+            r.get("codigoRecurso")
+            for r in self._ler_json(self.recurso)
+            if alvo in [str(x).strip().upper() for x in r.get("itemVinculado", [])]
+        ]
+
+    def validar_reserva(self, pedido):
+        """Valida um pedido de encomenda (§7.5 adaptado ao domínio correios).
+        Devolve lista de problemas."""
+        problemas = []
+        # código repetido
+        etq = str(pedido.get("numEtiqueta", "")).strip().upper()
+        if not etq:
+            problemas.append("Etiqueta vazia.")
+        elif self.buscar_pedido(etq) is not None:
+            problemas.append("Etiqueta repetida no cadastro.")
+        # categoria válida
+        cat = pedido.get("destinatario", {}).get("categoriaPublico", "")
+        if not self.validar_categoria(cat):
+            problemas.append(f"Categoria inválida: {cat}")
+        # embalagem válida
+        emb = pedido.get("embalagem", "")
+        if not self.validar_embalagem(emb):
+            problemas.append(f"Embalagem inválida: {emb}")
+        # statusRetirada coerente
+        ret = pedido.get("retirada", {})
+        if ret.get("statusRetirada", "").upper() == "CONCLUIDO":
+            if not ret.get("retiradoPor", "").strip():
+                problemas.append("Retirada CONCLUIDO exige 'retiradoPor'.")
+            if not ret.get("dataRetirada", "").strip():
+                problemas.append("Retirada CONCLUIDO exige 'dataRetirada'.")
+            elif not self.validar_data_iso(ret["dataRetirada"]):
+                problemas.append("dataRetirada inválida.")
+        # autorização de email
+        aut = ret.get("autorizacaoEmail", "").strip().upper()
+        if aut and aut not in ("SIM", "NAO"):
+            problemas.append("autorizacaoEmail deve ser SIM ou NAO.")
+        return problemas
+
     def editar(self, tipo, identificador, novos_dados):
         if tipo == "recurso":
             dados = self._ler_json(self.recurso)
@@ -320,7 +392,7 @@ class Cadastro:
         elif tipo == "pedido":
             if not os.path.exists(self.caminho):
                 return False
-            
+
             linhas = []
             cabecalho = None
             removido = False
@@ -339,6 +411,9 @@ class Cadastro:
                     escritor = csv.DictWriter(arquivo, fieldnames=cabecalho, delimiter=';')
                     escritor.writeheader()
                     escritor.writerows(linhas)
+                # >>> NOVO: limpa a prateleira junto <<<
+                self.remover_item_da_prateleira(identificador)
+
             return removido
         return False
 
