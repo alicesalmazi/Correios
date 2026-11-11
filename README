@@ -256,3 +256,56 @@ Uso da nossa TAD (tads.py) em vez de lista padrão: O professor não quer que us
 1. Classe única Arvore com o parâmetro balanceada. Um único código onde balanceada=False funciona como uma BST comum e balanceada=True ativa as rotações automáticas da AVL na inserção. 
 2. Métodos principais: inserir(chave, reserva), faixa(inicio, fim), predecessor(chave), caminho_medio(), em_ordem_com_pilha(), em_largura_com_fila() (
 3. Método coerente() validando o invariante de BST e o fator de balanceamento AVL.
+
+Histórico Detalhado de Prompts e Retornos Técnicos
+Bloco 1: Estruturação Inicial e Arquitetura do Menu (main.py e cadastro.py)
+O que você pediu (Prompt):
+
+Solicitou a organização inicial do código do projeto acadêmico (Central de Reservas do Setor de Correios do UNASP - Estrutura de Dados II) em Python, integrando um menu principal (main.py), a classe de persistência (cadastro.py) e os arquivos de dados tabular (pedidos.csv) e estruturado (inventario.json). Exigiu validações e importação de ficha de campo por ponto e vírgula (;).
+
+O que foi retornado (Implementação):
+
+Criação da classe unificada Cadastro em cadastro.py, eliminando a dependência de um arquivo avulso carregarDados.py.
+
+Implementação do método carregar_dados() utilizando csv.DictReader para converter linhas tabulares em dicionários aninhados (compatíveis com a modelagem do encomenda.json).
+
+Esqueleto inicial do menu interativo no main.py usando blocos while, try-except e chamadas orientadas a métodos da classe Cadastro.
+
+Bloco 2: Inversão de Lógica Operacional e Gestão de Prateleiras
+O que você pediu (Prompt):
+
+Redirecionou o fluxo do sistema com base na realidade operacional do setor: você determinou que a Opção 2 deveria focar na gestão diária de encomendas (cadastrar, colocar na prateleira, editar e remover), enquanto a Opção 3 ficaria reservada para a configuração e cadastro da infraestrutura física de prateleiras (inventario.json). Além disso, pediu a lógica para vincular a etiqueta da encomenda à prateleira respeitando a capacidade máxima.
+
+O que foi retornado (Implementação):
+
+Reorganização dos textos e das condicionais elif selecao == "2": e elif selecao == "3": no main.py.
+
+Criação do método inserir_item_na_prateleira(codigo_recurso, num_etiqueta) em cadastro.py, que valida a existência do recurso, verifica se len(itens_atuais) >= capacidade (evitando estouro de capacidade) e persiste as alterações em formato JSON indentado.
+
+Bloco 3: Integração das Estruturas Avançadas do Grupo (Heaps, Árvores e TADs)
+O que você pediu (Prompt):
+
+Apresentou os códigos desenvolvidos pelo grupo (arvore.py para Árvore B, Heap.py para Min-Heap e Heapsort, e tads.py para Fila e Pilha encadeadas) e perguntou como integrá-los às opções avançadas do menu (4, 6, 8, etc.) garantindo a exibição correta dos contadores de desempenho (nós visitados, operações de reorganização, etc.).   
+arvore.py
++ 2
+
+O que foi retornado (Implementação):
+
+Mapeamento dos módulos externos no main.py: from tads import Fila, Pilha, from Heap import MinHeap e from arvore import ArvoreB.
+
+Implementação da Opção 4 (Agenda com contagem de varredura), Opção 6 (Atendimento por Fila FIFO vs. Min-Heap com exibição de min_heap.operacoes) e Opção 8 (Indexação em disco por Árvore B, exibindo nós visitados, divisões e ocupação média).   
+arvore.py
++ 2
+
+Bloco 4: Funcionalidades de Consulta, Pilha de Desfazer e Relatórios Finais
+O que você pediu (Prompt):
+
+Solicitou a implementação lógica para as opções restantes do menu: consulta de disponibilidade de recursos (Opção 5), o mecanismo de desfazer a última operação utilizando a Pilha (Opção 7), o relatório consolidado de desempenho (Opção 9), a verificação de conflito de deslocamento/capacidade nas prateleiras (Opção 10) e a gravação de relatórios em arquivo texto (Opção 11).
+
+O que foi retornado (Implementação):
+
+Opção 5: Varredura no inventario.json calculando dinamicamente capacidade máxima, itens ocupados e espaços livres.
+
+Opção 7: Injeção da instância historico_acoes = Pilha() no ciclo do menu, utilizando .empilhar() nas transações bem-sucedidas e .desempilhar() para acionar o método gerenciador.remover() de forma segura e orientada a TAD.
+
+Opções 9, 10 e 11: Consolidação das métricas do MinHeap, varredura de integridade de capacidade por prateleira e rotina de escrita I/O gerando o arquivo relatorio_desempenho.txt.
