@@ -371,7 +371,8 @@ def menu() -> None:
 
                 for p in pedidos:
                     contador_visitados += 1
-                    data = p.get("dataPrevistaChegada", "")
+                    detalhamento = p.get("detalhamento", {})
+                    data = detalhamento.get("dataPrevistaChegada", "").strip()
                     if data and inicio_faixa <= data <= fim_faixa:
                         resultados.append(p)
 
