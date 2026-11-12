@@ -3,10 +3,10 @@ relatorio.py — Medições e gravação do relatório de desempenho.
 Produz os números que alimentam A1, A2, A3, A4 (§10 do caderno).
 Não usa sorted(), heapq, bisect, list.pop(0).
 """
-from arvore import Arvore
-from arvoreb import ArvoreB
-import heap
-from heap import MinHeap, heapsort
+from src.arvore import Arvore
+from src.arvoreb import ArvoreB
+import src.heap as heap
+from src.heap import MinHeap, heapsort
 
 
 # ---------- utilidades ----------

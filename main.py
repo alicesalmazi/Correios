@@ -1,11 +1,14 @@
-from arvore import Arvore
-from arvoreb import ArvoreB as B
-from cadastro import Cadastro
-from heap import MinHeap  
-from relatorio import gerar_secoes, escrever_txt
-from tads import Fila, Pilha
-from trajetoria import montar_grafo, menos_trechos, tempo_minimo, peso_do_caminho
+import os
+from src.arvore import Arvore
+from src.arvoreb import ArvoreB as B
+from src.cadastro import Cadastro
+from src.heap import MinHeap  
+from src.relatorio import gerar_secoes, escrever_txt
+from src.tads import Fila, Pilha
+from src.trajetoria import montar_grafo, menos_trechos, tempo_minimo, peso_do_caminho
+import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 print("=== CENTRAL DE RESERVAS - Setor: Correios ===")
 
 def _data_para_chave(s):
@@ -23,7 +26,7 @@ def _para_iso(s):
         return ""
 
 def menu() -> None:
-    gerenciador = Cadastro()
+    gerenciador = Cadastro(caminho="csv/pedidos.csv", recurso="json/inventario.json")
     historico_acoes = Pilha()
 
     while True:
@@ -876,7 +879,7 @@ def menu() -> None:
                 print("   10. MENOR CAMINHO NO CAMPUS [EXTENSÃO B]")
                 print("="*55)
 
-                grafo = montar_grafo("trechos.csv")
+                grafo = montar_grafo("csv/trechos.csv")
                 if not grafo:
                     print("⚠️ 'trechos.csv' não encontrado ou vazio.")
                     print("   Colunas esperadas: origem;destino;segundos")

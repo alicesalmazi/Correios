@@ -1,6 +1,6 @@
 """Arvore binaria de busca, com balanceamento AVL opcional."""
 
-from tads import Fila, Pilha
+from src.tads import Fila, Pilha
 
 class No:
     def __init__(self, chave, carga):

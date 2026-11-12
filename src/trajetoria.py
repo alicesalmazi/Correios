@@ -1,10 +1,10 @@
 import csv
-from heap import MinHeap
+from src.heap import MinHeap
 import os
-from tads import Fila
+from src.tads import Fila
 
 
-def montar_grafo(caminho="trechos.csv"):
+def montar_grafo(caminho="csv/trechos.csv"):    
     grafo = {}
     if not os.path.exists(caminho):
         return grafo

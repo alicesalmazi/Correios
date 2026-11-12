@@ -5,7 +5,7 @@ from datetime import datetime
 
 
 class Cadastro:
-    def __init__(self, caminho="pedidos.csv", recurso="inventario.json"):
+    def __init__(self, caminho="csv/pedidos.csv", recurso="json/inventario.json"):        
         self.caminho = caminho
         self.recurso = recurso
 

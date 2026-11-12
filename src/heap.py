@@ -8,7 +8,7 @@ Não utiliza heapq, sorted(), sort() ou bibliotecas de ordenação.
 
 import json
 from datetime import datetime, timezone
-from tads import Lista
+from src.tads import Lista
 
 
 PRIORIDADES = {
@@ -271,7 +271,7 @@ def heapsort(encomendas):
     return dados.para_lista()
 
 
-def carregar_encomendas(caminho="encomenda.json"):
+def carregar_encomendas(caminho="json/encomenda.json"):
     """Carrega um objeto ou uma lista de encomendas de um JSON."""
     with open(caminho, "r", encoding="utf-8") as arquivo:
         dados = json.load(arquivo)

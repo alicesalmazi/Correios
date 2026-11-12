@@ -9,7 +9,7 @@ Contador principal: nos visitados (cada no e um bloco de disco).
 Nao usa bisect, dict nem sorted.
 """
 
-from tads import Pilha
+from src.tads import Pilha
 
 
 class NoB:

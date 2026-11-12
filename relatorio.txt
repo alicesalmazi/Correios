@@ -1,0 +1,35 @@
+=== RELATÓRIO DE DESEMPENHO — CENTRAL DE RESERVAS ===
+
+BASE
+----
+Pedidos: 61
+Com data indexável: 60
+Sem data (ignorados): 1
+
+A1 — BST vs AVL
+---------------
+BST | altura=  61 | comp_ins=  3660 | rot=   0 | caminho=31.0 | busca(1ª/meio/últ/inex)=1/4/121/122 | coerente=True
+AVL | altura=   6 | comp_ins=   606 | rot=  55 | caminho=5.065573770491803 | busca(1ª/meio/últ/inex)=11/12/11/12 | coerente=True
+
+A2 — Faixa × varredura
+----------------------
+faixa=(20260925,20260925) | BST: 27 resg / 2 nós | AVL: 27 resg / 2 nós | varredura: 27 resg / 60 examinados
+faixa=(20260925,20260928) | BST: 59 resg / 3 nós | AVL: 59 resg / 3 nós | varredura: 59 resg / 60 examinados
+faixa=(20260928,20260928) | BST: 32 resg / 3 nós | AVL: 32 resg / 3 nós | varredura: 32 resg / 60 examinados
+faixa=(20260928,20261112) | BST: 33 resg / 3 nós | AVL: 33 resg / 3 nós | varredura: 33 resg / 60 examinados
+
+A3 — Árvore B
+-------------
+m= 3 | altura=  2 | nós=   3 | chaves=   3 | divisões=   1 | ocup=50.0% | coerente=True
+m= 5 | altura=  1 | nós=   1 | chaves=   3 | divisões=   0 | ocup=75.0% | coerente=True
+m=51 | altura=  1 | nós=   1 | chaves=   3 | divisões=   0 | ocup= 6.0% | coerente=True
+
+A4 — Heap e Heapsort
+--------------------
+Construção do Min-Heap: operações=0 comparações=108 trocas=49 coerente=True
+Heapsort: 61 itens ordenados
+  k=1: 1 extraídos com heap
+  k=5: 5 extraídos com heap
+  k=10: 10 extraídos com heap
+  k=20: 20 extraídos com heap
+
