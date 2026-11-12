@@ -3,10 +3,10 @@ relatorio.py — Medições e gravação do relatório de desempenho.
 Produz os números que alimentam A1, A2, A3, A4 (§10 do caderno).
 Não usa sorted(), heapq, bisect, list.pop(0).
 """
-from arvore import Arvore            # BST/AVL — §7.2 (bloqueado hoje)
+from arvore import Arvore
 from arvoreb import ArvoreB
-import Heap                          # módulo inteiro: permite getattr em k_menores_com_heap
-from Heap import MinHeap, heapsort
+import heap
+from heap import MinHeap, heapsort
 
 
 # ---------- utilidades ----------
@@ -18,16 +18,8 @@ def data_para_chave(s):
     except (ValueError, AttributeError):
         return None
 
-def data_para_chave(s):
-    """'DD/MM/YYYY' → inteiro YYYYMMDD ordenável. None se inválida."""
-    try:
-        d, m, a = str(s).strip().split("/")
-        return int(a) * 10000 + int(m) * 100 + int(d)
-    except (ValueError, AttributeError):
-        return None
 
-
-def _para_iso(s):                                        # <<< AQUI
+def _para_iso(s):
     """'DD/MM/YYYY' → 'YYYY-MM-DD' (comparável lexicograficamente)."""
     try:
         d, m, a = str(s).strip().split("/")
@@ -49,6 +41,38 @@ def extrair_pares(pedidos):
             pares.append((c, p))
     return pares, sem
 
+def _chave_etiqueta(pedido):
+    """Extrai o número final da etiqueta como inteiro ordenável.
+    'ETQ-2026-79720' → 79720."""
+    etq = str(pedido.get("numEtiqueta", "")).strip().upper()
+    if "-" in etq:
+        partes = etq.split("-")
+        try:
+            return int(partes[-1])
+        except (ValueError, IndexError):
+            return 0
+    try:
+        return int(etq)
+    except ValueError:
+        return 0
+
+
+def extrair_pares_por_etiqueta(pedidos):
+    """Pares (chave_etiqueta, pedido) ORDENADOS por chave (insertion sort).
+    Simula o cenário do §10: base que 'volta do disco em ordem',
+    fazendo a BST degenerar."""
+    pares = [(_chave_etiqueta(p), p) for p in pedidos]
+
+    # insertion sort manual (sem sorted — §7.7)
+    for i in range(1, len(pares)):
+        atual = pares[i]
+        j = i - 1
+        while j >= 0 and pares[j][0] > atual[0]:
+            pares[j + 1] = pares[j]
+            j -= 1
+        pares[j + 1] = atual
+
+    return pares
 
 def _chaves_amostra(pares):
     """min, meio, max por varredura manual (sem sorted — §7.7)."""
@@ -67,19 +91,29 @@ def medir_bst_avl(pares):
     """Retorna dict pronto para tabela do A1."""
     if not pares:
         return {}
+
     amostras = _chaves_amostra(pares)
     resultado = {}
+
     for rotulo, balanceada in (("BST", False), ("AVL", True)):
         arv = Arvore(balanceada=balanceada)
         rot = 0
+
+        # --- fase 1: inserção ---
         for c, p in pares:
             antes = getattr(arv, "rotacoes", 0)
             arv.inserir(c, p)
             rot += getattr(arv, "rotacoes", 0) - antes
+
+        # captura ANTES de qualquer busca — §10 (A1) quer só inserção
+        comp_ins = getattr(arv, "comparacoes", 0)
+
+        # --- fase 2: buscas (não contaminam comp_ins) ---
         buscas = [arv.buscar(c)[1] for c in amostras]
+
         resultado[rotulo] = {
             "altura": arv.altura(),
-            "comparacoes_insercao": getattr(arv, "comparacoes", "n/d"),
+            "comparacoes_insercao": comp_ins,
             "rotacoes": rot,
             "caminho_medio": arv.caminho_medio() if hasattr(arv, "caminho_medio") else "n/d",
             "busca_1a": buscas[0] if buscas else "-",
@@ -88,10 +122,55 @@ def medir_bst_avl(pares):
             "busca_inexistente": buscas[3] if buscas else "-",
             "coerente": arv.coerente(),
         }
+
     return resultado
 
 
 # ---------- A2: faixa × varredura ----------
+def _faixas_por_quartis(pares):
+    """
+    4 quartis por VOLUME de pedidos (cada grupo tem n/4 pedidos)
+    + 1 faixa extra com o dia de maior frequência.
+    Sem sorted() — insertion sort manual (§7.7).
+    """
+    if not pares:
+        return []
+
+    chaves = [c for c, _ in pares]
+
+    # insertion sort manual
+    for i in range(1, len(chaves)):
+        atual = chaves[i]
+        j = i - 1
+        while j >= 0 and chaves[j] > atual:
+            chaves[j + 1] = chaves[j]
+            j -= 1
+        chaves[j + 1] = atual
+
+    n = len(chaves)
+    faixas = []
+    for k in range(4):
+        ini_idx = (k * n) // 4
+        fim_idx = ((k + 1) * n) // 4 - 1
+        if fim_idx >= ini_idx:
+            faixas.append((chaves[ini_idx], chaves[fim_idx]))
+
+    # dia de pico por contagem (dict só para cadastro/contagem — §15 permite)
+    freq = {}
+    for c in chaves:
+        freq[c] = freq.get(c, 0) + 1
+    pico = None
+    maior = -1
+    for c, q in freq.items():
+        if q > maior:
+            maior = q
+            pico = c
+    if pico is not None and (pico, pico) not in faixas:
+        faixas.append((pico, pico))
+
+    return faixas
+
+
 def medir_faixas(pares, faixas):
     """
     faixas: lista de (inicio, fim). Para cada faixa devolve
@@ -156,15 +235,14 @@ def medir_heap(pedidos, ks=(1, 5, 10, 20)):
     for p in pedidos_iso:
         h.inserir(p)
     construcao = {
-        "operacoes": h.operacoes,
+        "operacoes": getattr(h, "operacoes", 0),
         "comparacoes": getattr(h, "comparacoes", "n/d"),
         "trocas": getattr(h, "trocas", "n/d"),
         "coerente": h.coerente() if hasattr(h, "coerente") else "n/d",
     }
-    ordenadas = heapsort(pedidos_iso)               # <<< usa a lista ISO também
+    ordenadas = heapsort(pedidos_iso)
 
-    # k_menores_com_heap ainda pode não existir — checa por getattr no topo
-    k_menores = getattr(Heap, "k_menores_com_heap", None)
+    k_menores = getattr(heap, "k_menores_com_heap", None)
     topo = None
     if k_menores is not None:
         topo = {k: len(k_menores(pedidos_iso, k)) for k in ks}
@@ -186,9 +264,10 @@ def gerar_secoes(gerenciador):
         f"Sem data (ignorados): {sem_data}"
     ))
 
-    # --- A1 (bloqueado se arvore.py estiver errado) ---
+    # --- A1: BST vs AVL ---
     try:
-        r = medir_bst_avl(pares)
+        pares_etq = extrair_pares_por_etiqueta(pedidos)
+        r = medir_bst_avl(pares_etq)
         linhas = []
         for rot in ("BST", "AVL"):
             d = r.get(rot, {})
@@ -207,7 +286,24 @@ def gerar_secoes(gerenciador):
         secoes.append(("A1 — BST vs AVL", f"BLOQUEADO: {e}\n"
                        "→ corrija arvore.py (§7.2 do caderno)"))
 
-    # --- A3 ---
+    # --- A2: faixa × varredura (quartis por pedidos — sem sorted) ---
+    try:
+        faixas = _faixas_por_quartis(pares)
+        r = medir_faixas(pares, faixas)
+        linhas = []
+        for d in r:
+            ini, fim = d["faixa"]
+            linhas.append(
+                f"faixa=({ini},{fim}) | "
+                f"BST: {d['BST'][0]} resg / {d['BST'][1]} nós | "
+                f"AVL: {d['AVL'][0]} resg / {d['AVL'][1]} nós | "
+                f"varredura: {d['varredura'][0]} resg / {d['varredura'][1]} examinados"
+            )
+        secoes.append(("A2 — Faixa × varredura", "\n".join(linhas)))
+    except Exception as e:
+        secoes.append(("A2 — Faixa × varredura", f"ERRO: {e}"))
+
+    # --- A3: Árvore B ---
     try:
         r = medir_btree(pares)
         linhas = []
@@ -222,7 +318,7 @@ def gerar_secoes(gerenciador):
     except Exception as e:
         secoes.append(("A3 — Árvore B", f"ERRO: {e}"))
 
-    # --- A4 ---
+    # --- A4: Heap ---
     r = medir_heap(pedidos)
     c = r["construcao"]
     linhas = [
@@ -235,7 +331,7 @@ def gerar_secoes(gerenciador):
         for k, v in r["top"].items():
             linhas.append(f"  k={k}: {v} extraídos com heap")
     else:
-        linhas.append("  ⚠️ k_menores_com_heap ausente em Heap.py (A4)")
+        linhas.append("  ⚠️ k_menores_com_heap ausente em heap.py (A4)")
     secoes.append(("A4 — Heap e Heapsort", "\n".join(linhas)))
 
     return secoes

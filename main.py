@@ -1,14 +1,14 @@
-from cadastro import Cadastro
-from tads import Fila, Pilha
-from Heap import MinHeap
-from arvore import ArvoreB as A
+from arvore import Arvore
 from arvoreb import ArvoreB as B
+from cadastro import Cadastro
+from heap import MinHeap  
+from relatorio import gerar_secoes, escrever_txt
+from tads import Fila, Pilha
+from trajetoria import montar_grafo, menos_trechos, tempo_minimo, peso_do_caminho
 
 print("=== CENTRAL DE RESERVAS - Setor: Correios ===")
 
 def _data_para_chave(s):
-    """'DD/MM/YYYY' → inteiro YYYYMMDD ordenável cronologicamente.
-    Retorna None se a data for vazia/inválida."""
     try:
         d, m, a = str(s).strip().split("/")
         return int(a) * 10000 + int(m) * 100 + int(d)
@@ -16,7 +16,6 @@ def _data_para_chave(s):
         return None
 
 def _para_iso(s):
-    """'DD/MM/YYYY' → 'YYYY-MM-DD' (comparável lexicograficamente)."""
     try:
         d, m, a = str(s).strip().split("/")
         return f"{a}-{m}-{d}"
@@ -75,7 +74,6 @@ def menu() -> None:
                     print("="*50)
                     
                     while True:
-                        # RE-LE O ARQUIVO EM DISCO A CADA TENTATIVA (garante dado atualizado)
                         pedidos_existentes = gerenciador.carregar_dados()
                         etiquetas_cadastradas = [
                             str(p.get("numEtiqueta", "")).strip().upper() 
@@ -90,7 +88,7 @@ def menu() -> None:
                         elif num_etiqueta in etiquetas_cadastradas:
                             print(f"❌ ERRO CRÍTICO: A etiqueta '{num_etiqueta}' já está cadastrada no sistema! Escolha outro número.")
                         else:
-                            break # Só sai do while se a etiqueta for inédita!
+                            break 
 
                     num_cadastro = input("Número de Cadastro (RA/ID): ").strip()
                     nome_destinatario = input("Nome do Destinatário: ").strip()
@@ -111,7 +109,6 @@ def menu() -> None:
                             break
                         print(f"❌ Categoria '{categoria_publico}' inválida! Escolha exatamente uma da lista oficial.")
 
-                    # Data de chegada efetiva opcional (pode ficar em branco se o pacote ainda não chegou)
                     while True:
                         data_chegada_input = input("\nData de Chegada Efetiva (Pressione ENTER se ainda não chegou): ").strip()
                         if not data_chegada_input:
@@ -122,7 +119,6 @@ def menu() -> None:
                             break
                         print("❌ Data inválida! Use o formato correto (ex: DD/MM/AAAA).")
 
-                    # Data prevista de chegada
                     while True:
                         data_prevista = input("Data Prevista de Chegada (Opcional - DD/MM/AAAA): ").strip()
                         if not data_prevista or gerenciador.validar_data_iso(data_prevista):
@@ -158,21 +154,19 @@ def menu() -> None:
                     if erros:
                         print("\n⚠️ Erros encontrados:")
                         for e in erros: print(f"   - {e}")
-                        return   # ou continue pedindo
+                        continue
                     gerenciador.cadastrar("pedido", novo_pedido)
                     
-                    gerenciador.cadastrar("pedido", novo_pedido)
                     print("\n✅ Encomenda cadastrada com sucesso em pedidos.csv!")
 
                     historico_acoes.empilhar({
                         "tipo": "pedido",
                         "acao": "cadastrar",
                         "identificador": novo_pedido["numEtiqueta"],
-                        "dados_novos": novo_pedido,      # <<< novo
+                        "dados_novos": novo_pedido,      
                         "descricao": f"Cadastrar pedido {novo_pedido['numEtiqueta']}"
                     })
                     
-                    # Alocação na Prateleira com Listagem e Validação de Prioridade ativa
                     alocar = input("\nDeseja alocar este item em uma prateleira agora? (s/n): ").strip().lower()
                     if alocar == 's':
                         print("\n" + "-"*55)
@@ -226,8 +220,8 @@ def menu() -> None:
                             "tipo": "pedido",
                             "acao": "remover",
                             "identificador": etq,
-                            "dados_anteriores": snap,        # <<< para reinserir
-                            "prateleiras_anteriores": prat_old,  # <<< para re-alocar
+                            "dados_anteriores": snap,        
+                            "prateleiras_anteriores": prat_old,  
                             "descricao": f"Remover pedido {etq}"
                         })
                         print(f"✅ Pedido removido! ({len(prat_old)} prateleira(s) liberada(s))")
@@ -263,16 +257,20 @@ def menu() -> None:
                                     break
                                 print("❌ Status inválido! Digite exatamente ENTREGUE ou AGUARDANDO.")
 
-                            snap_antes = gerenciador.buscar_pedido(etq)                       # <<< NOVO
-                            sucesso = gerenciador.editar("pedido", etq, {"status": novo_status})
+                            snap_antes = gerenciador.buscar_pedido(etq)                       
+                            try:
+                                sucesso = gerenciador.editar("pedido", etq, {"status": novo_status})
+                            except Exception as e:
+                                print(f"❌ Erro ao gravar: {type(e).__name__}: {e}")
+                                sucesso = False
                             if sucesso:
-                                historico_acoes.empilhar({                                    # <<< NOVO
-                                    "tipo": "pedido",                                         # <<< NOVO
-                                    "acao": "editar",                                         # <<< NOVO
-                                    "identificador": etq,                                     # <<< NOVO
-                                    "dados_anteriores": snap_antes,                           # <<< NOVO
-                                    "descricao": f"Editar status de {etq}"                    # <<< NOVO
-                                })                                                            # <<< NOVO
+                                historico_acoes.empilhar({                                    
+                                    "tipo": "pedido",                                         
+                                    "acao": "editar",                                         
+                                    "identificador": etq,                                     
+                                    "dados_anteriores": snap_antes,                           
+                                    "descricao": f"Editar status de {etq}"                    
+                                })                                                            
                                 print(f"✅ Status do pedido '{etq}' atualizado para '{novo_status}'!")
 
                         elif sub_opcao == "2":
@@ -292,16 +290,20 @@ def menu() -> None:
                                     "palavraChave": palavra
                                 }
                             }
-                            snap_antes = gerenciador.buscar_pedido(etq)                       # <<< NOVO
-                            sucesso = gerenciador.editar("pedido", etq, dados_chegada)
+                            snap_antes = gerenciador.buscar_pedido(etq)                       
+                            try:
+                                sucesso = gerenciador.editar("pedido", etq, dados_chegada)
+                            except Exception as e:
+                                print(f"❌ Erro ao gravar: {type(e).__name__}: {e}")
+                                sucesso = False
                             if sucesso:
-                                historico_acoes.empilhar({                                    # <<< NOVO
-                                    "tipo": "pedido",                                         # <<< NOVO
-                                    "acao": "editar",                                         # <<< NOVO
-                                    "identificador": etq,                                     # <<< NOVO
-                                    "dados_anteriores": snap_antes,                           # <<< NOVO
-                                    "descricao": f"Editar chegada de {etq}"                   # <<< NOVO
-                                })                                                            # <<< NOVO
+                                historico_acoes.empilhar({                                    
+                                    "tipo": "pedido",                                         
+                                    "acao": "editar",                                         
+                                    "identificador": etq,                                     
+                                    "dados_anteriores": snap_antes,                           
+                                    "descricao": f"Editar chegada de {etq}"                   
+                                })                                                            
                                 print(f"✅ Dados de chegada da encomenda '{etq}' atualizados!")
 
                         elif sub_opcao == "3":
@@ -338,16 +340,20 @@ def menu() -> None:
                                     "dataRetirada": data_ret
                                 }
                             }
-                            snap_antes = gerenciador.buscar_pedido(etq)                       # <<< NOVO
-                            sucesso = gerenciador.editar("pedido", etq, dados_retirada)
+                            snap_antes = gerenciador.buscar_pedido(etq)                       
+                            try:
+                                sucesso = gerenciador.editar("pedido", etq, dados_retirada)
+                            except Exception as e:
+                                print(f"❌ Erro ao gravar: {type(e).__name__}: {e}")
+                                sucesso = False
                             if sucesso:
-                                historico_acoes.empilhar({                                    # <<< NOVO
-                                    "tipo": "pedido",                                         # <<< NOVO
-                                    "acao": "editar",                                         # <<< NOVO
-                                    "identificador": etq,                                     # <<< NOVO
-                                    "dados_anteriores": snap_antes,                           # <<< NOVO
-                                    "descricao": f"Editar retirada de {etq}"                  # <<< NOVO
-                                })                                                            # <<< NOVO
+                                historico_acoes.empilhar({                                    
+                                    "tipo": "pedido",                                         
+                                    "acao": "editar",                                         
+                                    "identificador": etq,                                     
+                                    "dados_anteriores": snap_antes,                           
+                                    "descricao": f"Editar retirada de {etq}"                  
+                                })                                                            
                                 print(f"✅ Informações de retirada do pedido '{etq}' atualizadas!")
 
                                 if status_ret == "CONCLUIDO":
@@ -392,16 +398,20 @@ def menu() -> None:
                                 "destinatario": {"nome": nome_dest, "categoriaPublico": cat_pub},
                                 "status": status_input
                             }
-                            snap_antes = gerenciador.buscar_pedido(etq)                       # <<< NOVO
-                            sucesso = gerenciador.editar("pedido", etq, dados_completos)
+                            snap_antes = gerenciador.buscar_pedido(etq)                       
+                            try:
+                                sucesso = gerenciador.editar("pedido", etq, dados_completos)
+                            except Exception as e:
+                                print(f"❌ Erro ao gravar: {type(e).__name__}: {e}")
+                                sucesso = False
                             if sucesso:
-                                historico_acoes.empilhar({                                    # <<< NOVO
-                                    "tipo": "pedido",                                         # <<< NOVO
-                                    "acao": "editar",                                         # <<< NOVO
-                                    "identificador": etq,                                     # <<< NOVO
-                                    "dados_anteriores": snap_antes,                           # <<< NOVO
-                                    "descricao": f"Edição completa de {etq}"                  # <<< NOVO
-                                })                                                            # <<< NOVO
+                                historico_acoes.empilhar({                                    
+                                    "tipo": "pedido",                                         
+                                    "acao": "editar",                                         
+                                    "identificador": etq,                                     
+                                    "dados_anteriores": snap_antes,                           
+                                    "descricao": f"Edição completa de {etq}"                  
+                                })                                                            
                                 print(f"✅ Dados principais da encomenda '{etq}' atualizados!")
                                 if status_input == "ENTREGUE":                                # opcional
                                     if gerenciador.remover_item_da_prateleira(etq):
@@ -457,33 +467,54 @@ def menu() -> None:
                         print("❌ Não encontrada.")
 
             elif selecao == "4":
-                print("\n--- 4. AGENDA DE UM DIA (FAIXA DE HORÁRIO) ---")
+                print("\n--- 4. AGENDA — ENCOMENDAS EM UMA FAIXA DE DATAS ---")
                 while True:
-                    inicio_faixa = input("Data/Hora Inicial (ex: DD/MM/AAAA): ").strip()
-                    if gerenciador.validar_data_iso(inicio_faixa):
-                        data = inicio_faixa
-                        break
-                    print("❌ Data inválida! Use o formato correto (ex: DD/MM/AAAA).")
+                    ini_str = input("\nData Inicial (DD/MM/AAAA): ").strip()
+                    if gerenciador.validar_data_iso(ini_str): break
+                    print("❌ Data inválida!")
                 while True:
-                    fim_faixa = input("Data/Hora Final (ex: DD/MM/AAAA): ").strip()
-                    if gerenciador.validar_data_iso(fim_faixa):
-                        data = fim_faixa
-                        break
-                    print("❌ Data inválida! Use o formato correto (ex: DD/MM/AAAA).")
-                
-                pedidos = gerenciador.carregar_dados()
-                contador_visitados = 0
-                resultados = []
+                    fim_str = input("Data Final   (DD/MM/AAAA): ").strip()
+                    if gerenciador.validar_data_iso(fim_str): break
+                    print("❌ Data inválida!")
 
-                for p in pedidos:
-                    contador_visitados += 1
-                    detalhamento = p.get("detalhamento", {})
-                    data = detalhamento.get("dataPrevistaChegada", "").strip()
-                    if data and inicio_faixa <= data <= fim_faixa:
-                        resultados.append(p)
+                ini = _data_para_chave(ini_str)
+                fim = _data_para_chave(fim_str)
+                if ini is None or fim is None or ini > fim:
+                    print("❌ Faixa inválida.")
+                else:
+                    print("\nEscolha a estrutura: [1] BST  [2] AVL  [3] Varredura")
+                    est = input("Opção: ").strip()
+                    pedidos = gerenciador.carregar_dados()
+                    resultados = []
 
-                print(f"\n[RESULTADO] Encontradas {len(resultados)} encomendas na faixa.")
-                print(f"📊 MÉTRICA - Registros examinados/visitados: {contador_visitados}")
+                    if est == "3":
+                        examinados = 0
+                        for p in pedidos:
+                            examinados += 1
+                            c = _data_para_chave(p.get("detalhamento", {}).get("dataPrevistaChegada", ""))
+                            if c is not None and ini <= c <= fim:
+                                resultados.append(p)
+                        print(f"\n[VARREDURA] {len(resultados)} pedido(s). Registros examinados: {examinados}")
+                    elif est in ("1", "2"):
+                        arv = Arvore(balanceada=(est == "2"))
+                        for p in pedidos:
+                            c = _data_para_chave(p.get("detalhamento", {}).get("dataPrevistaChegada", ""))
+                            if c is not None:
+                                arv.inserir(c, p)
+                        resultados, visitados = arv.faixa(ini, fim)
+                        nome = "AVL" if est == "2" else "BST"
+                        print(f"\n[{nome}] {len(resultados)} pedido(s). Nós visitados com poda: {visitados}")
+                        print(f"Altura: {arv.altura()} | coerente() = {arv.coerente()}")
+                    else:
+                        print("❌ Opção inválida.")
+                        return
+
+                    # listagem
+                    print("\n" + "-"*85)
+                    for idx, p in enumerate(resultados, 1):
+                        d = p.get("destinatario", {})
+                        print(f"{idx:>3} | {p.get('numEtiqueta'):<20} | {d.get('nome','—'):<22} | "
+                            f"{d.get('categoriaPublico','—'):<20}")
 
             elif selecao == "5":
                 print("\n" + "="*50)
@@ -551,11 +582,11 @@ def menu() -> None:
                     est = input("Opção: ").strip()
 
                     mapa = gerenciador.MAPA_PRIORIDADE_CATEGORIA
-                    primeiros = []          # <<< guarda os 3 primeiros na ordem escolhida
+                    primeiros = []
 
                     if est == "1":
                         fila = Fila()
-                        for p in espera:                    # FIFO usa a ordem do CSV
+                        for p in espera:
                             fila.enfileirar(p)
                         print("\n🔵 Ordem de alocação — Fila FIFO:")
                         ordem = 1
@@ -570,13 +601,9 @@ def menu() -> None:
                         print(f"\n📊 Operações na Fila: {fila.operacoes}")
 
                     elif est == "2":
-                        # normaliza dataChegada para ISO (bug do DD/MM/YYYY lexicográfico)
-                        espera_iso = [
-                            {**p, "dataChegada": _para_iso(p.get("dataChegada", ""))}
-                            for p in espera
-                        ]
+                        # Heap com default chave_da_encomenda (fix 2)
                         h = MinHeap()
-                        for p in espera_iso:
+                        for p in espera:
                             h.inserir(p)
                         print("\n🟢 Ordem de alocação — Min-Heap:")
                         ordem = 1
@@ -588,7 +615,8 @@ def menu() -> None:
                             if ordem <= 3:
                                 primeiros.append(p)
                             ordem += 1
-                        print(f"\n📊 Operações no Heap: {h.operacoes}")
+                        # contadores do novo Heap.py (comparacoes + trocas em vez de operacoes)
+                        print(f"\n📊 Comparações: {h.comparacoes} | Trocas: {h.trocas}")
                         if hasattr(h, "coerente"):
                             print(f"✅ coerente() = {h.coerente()}")
                         else:
@@ -618,7 +646,6 @@ def menu() -> None:
                 if historico_acoes.vazia():
                     print("❌ Não há operações recentes para desfazer.")
                 else:
-                    # espiar antes de desempilhar
                     topo = historico_acoes.espiar()
                     print(f"🔄 Vai desfazer: {topo.get('descricao', topo)}")
                     if input("Confirma? (s/n): ").strip().lower() != "s":
@@ -631,7 +658,6 @@ def menu() -> None:
                         ok       = False
 
                         try:
-                            # ---------- cadastrar → desfazer é remover ----------
                             if acao == "cadastrar":
                                 ok = gerenciador.remover(tipo, id_alvo)
                                 if ok:
@@ -639,7 +665,6 @@ def menu() -> None:
                                 else:
                                     print(f"❌ '{id_alvo}' não foi encontrado para remover.")
 
-                            # ---------- remover → desfazer é reinserir ----------
                             elif acao == "remover":
                                 dados = acao_undo.get("dados_anteriores")
                                 if not dados:
@@ -666,7 +691,6 @@ def menu() -> None:
                                         ok = True
                                         print(f"✅ Prateleira '{id_alvo}' restaurada.")
 
-                            # ---------- editar → desfazer é re-aplicar o snapshot antigo ----------
                             elif acao == "editar":
                                 dados = acao_undo.get("dados_anteriores")
                                 if not dados:
@@ -679,7 +703,6 @@ def menu() -> None:
                                     if ok:
                                         print(f"✅ Edição de '{id_alvo}' revertida.")
 
-                            # ---------- alocar → desfazer é liberar a prateleira ----------
                             elif acao == "alocar":
                                 prat = acao_undo.get("prateleira")
                                 ok = gerenciador.remover_item_da_prateleira(id_alvo)
@@ -696,9 +719,9 @@ def menu() -> None:
                         print(f"📊 Operações restantes na pilha: {historico_acoes.tamanho()}")
                         
             elif selecao == "8":
-                print("\n" + "="*55)
-                print("   8. ÍNDICE EM DISCO DO HISTÓRICO (ÁRVORE B)")
-                print("="*55)
+                print("\n" + "="*60)
+                print("   8. ÍNDICE EM DISCO — ÁRVORE B × AVL (A3 do §10)")
+                print("="*60)
 
                 pedidos = gerenciador.carregar_dados()
                 pares = []
@@ -715,13 +738,15 @@ def menu() -> None:
                 if not pares:
                     print("⚠️ Nenhum pedido com data válida para indexar.")
                 else:
-                    print(f"📦 {len(pares)} pedido(s) indexável(is)"
-                        f"  ({sem_data} ignorado(s) por falta de data)\n")
+                    print(f"📦 {len(pares)} pedido(s) indexável(is)  "
+                        f"({sem_data} ignorado(s) por falta de data)\n")
 
-                    # ---- constrói três árvores B com ordens diferentes ----
+                    # ------------------------------------------------------------
+                    # 1) Construção das 3 árvores B
+                    # ------------------------------------------------------------
                     resultados = []
                     for m in (3, 5, 51):
-                        arv = B(m=m)                     # B = arvoreb.ArvoreB (já importado no topo)
+                        arv = B(m=m)
                         for chave, ped in pares:
                             arv.inserir(chave, ped)
                         resultados.append({
@@ -735,7 +760,9 @@ def menu() -> None:
                             "chaves": arv.n_chaves,
                         })
 
-                    # ---- tabela 1: construção ----
+                    # ------------------------------------------------------------
+                    # 2) Tabela 1 — construção (B-tree por ordem m)
+                    # ------------------------------------------------------------
                     print(f"{'m':>3} | {'altura':>6} | {'nós':>4} | {'chaves':>6} | "
                         f"{'divisões':>8} | {'ocup.':>6} | {'coerente':>8}")
                     print("-" * 62)
@@ -744,14 +771,16 @@ def menu() -> None:
                             f"{r['chaves']:>6} | {r['divisoes']:>8} | "
                             f"{r['ocupacao']:>5.1%} | {str(r['coerente']):>8}")
 
-                    # ---- tabela 2: busca (amostras) ----
-                    # min e max por varredura manual (sem sorted — §7.7)
+                    # ------------------------------------------------------------
+                    # 3) Tabela 2 — busca (nós visitados por consulta)
+                    #    min/max por varredura manual 
+                    # ------------------------------------------------------------
                     chaves_ord = [c for c, _ in pares]
                     cmin = cmax = chaves_ord[0]
                     for c in chaves_ord:
                         if c < cmin: cmin = c
                         if c > cmax: cmax = c
-                    amostras = [cmin, (cmin + cmax) // 2, cmax, 99999999]   # 4ª = inexistente
+                    amostras = [cmin, (cmin + cmax) // 2, cmax, 99999999]
                     rotulos = ["1ª", "meio", "última", "inexist."]
 
                     print(f"\n--- Nós visitados por busca (cada nó = 1 bloco de disco) ---")
@@ -761,28 +790,79 @@ def menu() -> None:
                         visitas = [r["arvore"].buscar(c)[1] for c in amostras]
                         print(f"{r['m']:>3} | " + " | ".join(f"{v:>8}" for v in visitas))
 
-                    # ---- custo acumulado de construção ----
+                    # ------------------------------------------------------------
+                    # 4) Custo acumulado de construção
+                    # ------------------------------------------------------------
                     print("\n--- Custo acumulado de construção do índice ---")
                     for r in resultados:
                         print(f"  m={r['m']:>2}: "
                             f"{r['arvore'].nos_visitados:>5} nós visitados, "
                             f"{r['divisoes']:>4} divisões")
 
-                    # ---- coerência global ----
-                    todos_ok = all(r["coerente"] for r in resultados)
-                    print(f"\n{'✅' if todos_ok else '❌'} coerente() em todas as ordens: {todos_ok}")
+                    # ------------------------------------------------------------
+                    # 5) COMPARAÇÃO COM AVL — o que §10 A3 exige
+                    # ------------------------------------------------------------
+                    avl = Arvore(balanceada=True)
+                    for chave, ped in pares:
+                        avl.inserir(chave, ped)
 
-                    # ---- lembrete do bloqueio da comparação com AVL ----
-                    print("\nℹ️ Para o achado A3 completo (comparação com a AVL),")
-                    print("   falta a BST/AVL em arvore.py (§7.2 do caderno).")
-                    print("   Hoje arvore.py contém o mesmo código de arvoreb.py.")
+                    print("\n" + "="*60)
+                    print("   COMPARAÇÃO COM AVL (mesma base — §10 A3)")
+                    print("="*60)
+                    print(f"AVL: altura={avl.altura()} | "
+                        f"nós={avl.n_nos} | "
+                        f"comparações de inserção={avl.comparacoes} | "
+                        f"rotações={avl.rotacoes} | "
+                        f"coerente={avl.coerente()}")
+
+                    # busca AVL nas mesmas 4 amostras
+                    avl_visitas = [avl.buscar(c)[1] for c in amostras]
+                    print(f"AVL nós visitados por busca: "
+                        f"1ª={avl_visitas[0]} | meio={avl_visitas[1]} | "
+                        f"última={avl_visitas[2]} | inexistente={avl_visitas[3]}")
+
+                    print(f"\n--- Tabela comparativa: B-tree × AVL ---")
+                    print(f"{'estrutura':>12} | {'altura':>6} | {'nós':>4} | "
+                        f"{'busca 1ª':>9} | {'busca últ.':>10} | {'coerente':>8}")
+                    print("-" * 66)
+                    # AVL primeiro (referência)
+                    print(f"{'AVL':>12} | {avl.altura():>6} | {avl.n_nos:>4} | "
+                        f"{avl_visitas[0]:>9} | {avl_visitas[2]:>10} | "
+                        f"{str(avl.coerente()):>8}")
+                    # depois as 3 B-trees
+                    for r in resultados:
+                        visitas = [r["arvore"].buscar(c)[1] for c in amostras]
+                        print(f"{'B-tree m=' + str(r['m']):>12} | {r['altura']:>6} | "
+                            f"{r['nos']:>4} | {visitas[0]:>9} | {visitas[2]:>10} | "
+                            f"{str(r['coerente']):>8}")
+
+                    # ------------------------------------------------------------
+                    # 6) coerência global
+                    # ------------------------------------------------------------
+                    todos_ok = all(r["coerente"] for r in resultados) and avl.coerente()
+                    print(f"\n{'✅' if todos_ok else '❌'} coerente() em todas as estruturas: {todos_ok}")
+
+                    # ------------------------------------------------------------
+                    # 7) leitura dos números para o relatório A3 (§10)
+                    # ------------------------------------------------------------
+                    print("\n📊 Para o relatório A3:")
+                    print(f"   AVL:      altura={avl.altura():>3}, busca última={avl_visitas[2]} nós")
+                    for r in resultados:
+                        visitas = [r["arvore"].buscar(c)[1] for c in amostras]
+                        print(f"   B m={r['m']:>2}: altura={r['altura']:>3}, "
+                            f"busca última={visitas[2]} nós, "
+                            f"ocupação={r['ocupacao']:>5.1%}")
+                    print("\n   ℹ️  Interpretação para o relatório:")
+                    print("   • Aumentar m → altura cai, ocupação sobe, divisões caem.")
+                    print("   • B-tree com m=51 lê menos blocos de disco que a AVL")
+                    print("     (que precisa de log₂(n) saltos em ponteiros).")
+                    print("   • É a razão pela qual SGBDs usam árvore B em disco")
+                    print("     e reservam AVL para estruturas em memória.")
 
             elif selecao == "9":
                 print("\n" + "="*55)
                 print("     RELATÓRIO DE DESEMPENHO DAS ESTRUTURAS")
                 print("="*55)
-
-                from relatorio import gerar_secoes
 
                 secoes = gerar_secoes(gerenciador)
                 for titulo, corpo in secoes:
@@ -795,9 +875,6 @@ def menu() -> None:
                 print("\n" + "="*55)
                 print("   10. MENOR CAMINHO NO CAMPUS [EXTENSÃO B]")
                 print("="*55)
-
-                from trajetoria import (montar_grafo, menos_trechos,
-                                        tempo_minimo, peso_do_caminho)
 
                 grafo = montar_grafo("trechos.csv")
                 if not grafo:
@@ -823,20 +900,17 @@ def menu() -> None:
                         if t is None and s is None:
                             print("\n❌ Não existe caminho entre esses locais.")
                         else:
-                            # ---- resultado BFS ----
                             tempo_bfs = peso_do_caminho(grafo, cam_bfs)
                             print(f"\n🔵 BFS (menos trechos) — usando Fila")
                             print(f"   {t} trecho(s), {vis} nós visitados")
                             print(f"   Caminho: {' → '.join(cam_bfs)}")
                             print(f"   Tempo total desse caminho: {tempo_bfs}s")
 
-                            # ---- resultado Dijkstra ----
                             print(f"\n🟢 Dijkstra (menor tempo) — usando Heap")
                             print(f"   {s}s, {rem} remoções do heap, {cmp} comparações")
                             print(f"   Caminho: {' → '.join(cam_dij)}")
                             print(f"   Trechos desse caminho: {len(cam_dij) - 1}")
 
-                            # ---- análise: concordam ou divergem? ----
                             print("\n" + "-"*55)
                             if t == len(cam_dij) - 1:
                                 print("✅ BFS e Dijkstra concordam no número de trechos.")
@@ -853,13 +927,11 @@ def menu() -> None:
                                     f"(diferença: {tempo_bfs - s}s).")
                             print("-"*55)
 
-                            # ---- contagem para o relatório ----
                             print(f"\n📊 Para o relatório:")
                             print(f"   BFS:      {vis} nós visitados, {t} trechos, {tempo_bfs}s")
                             print(f"   Dijkstra: {rem} remoções, {len(cam_dij) - 1} trechos, {s}s")
 
             elif selecao == "11":
-                from relatorio import gerar_secoes, escrever_txt
                 secoes = gerar_secoes(gerenciador)
                 escrever_txt(secoes, "relatorio.txt")
                 print(f"✅ 'relatorio.txt' gravado ({len(secoes)} seções).")

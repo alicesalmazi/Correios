@@ -1,18 +1,10 @@
-"""
-trajetoria.py — Trilha B: grafo do campus.
-BFS com Fila (tads.py), Dijkstra com MinHeap (Heap.py).
-"""
 import csv
+from heap import MinHeap
 import os
 from tads import Fila
-from Heap import MinHeap
 
 
 def montar_grafo(caminho="trechos.csv"):
-    """
-    Lê 'origem;destino;segundos'. Retorna {local: [(vizinho, seg), ...]}.
-    Grafo NÃO-dirigido (insere as duas direções).
-    """
     grafo = {}
     if not os.path.exists(caminho):
         return grafo
@@ -33,7 +25,6 @@ def montar_grafo(caminho="trechos.csv"):
 
 
 def peso_do_caminho(grafo, caminho):
-    """Soma os pesos das arestas do caminho. None se alguma aresta não existir."""
     if not caminho or len(caminho) < 2:
         return 0
     total = 0
@@ -51,7 +42,6 @@ def peso_do_caminho(grafo, caminho):
 
 
 def menos_trechos(grafo, origem, destino):
-    """BFS com Fila. Retorna (trechos, caminho, nos_visitados)."""
     if origem not in grafo or destino not in grafo:
         return (None, [], 0)
     fila = Fila()
@@ -79,10 +69,6 @@ def menos_trechos(grafo, origem, destino):
 
 
 def tempo_minimo(grafo, origem, destino):
-    """
-    Dijkstra com MinHeap.
-    Retorna (segundos, caminho, remocoes_do_heap, comparacoes_do_heap).
-    """
     if origem not in grafo or destino not in grafo:
         return (None, [], 0, 0)
 

@@ -1,8 +1,6 @@
 """Arvore binaria de busca, com balanceamento AVL opcional."""
 
 from tads import Fila, Pilha
-from arvoreb import ArvoreB, NoB
-
 
 class No:
     def __init__(self, chave, carga):
@@ -107,15 +105,15 @@ class Arvore:
                     setattr(pai, lado, nova_raiz)
 
     def buscar(self, chave):
-        comparacoes_iniciais = self.comparacoes
+        comparacoes = 0
         no = self.raiz
         while no is not None:
-            self.comparacoes += 1
+            comparacoes += 1
             if chave == no.chave:
-                return no.cargas, self.comparacoes - comparacoes_iniciais
-            self.comparacoes += 1
+                return no.cargas, comparacoes
+            comparacoes += 1
             no = no.esquerda if chave < no.chave else no.direita
-        return [], self.comparacoes - comparacoes_iniciais
+        return [], comparacoes
 
     def faixa(self, inicio, fim):
         cargas = []

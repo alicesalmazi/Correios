@@ -57,7 +57,11 @@ class Cadastro:
         return categoria.strip().upper() in self.CATEGORIAS_VALIDAS
 
     def validar_data_iso(self, data_str):
-        data_clean = data_str.strip()
+        if data_str is None:
+            return False
+        data_clean = str(data_str).strip()
+        if not data_clean:
+            return False
         formatos = ["%d/%m/%YT%H:%M:%S", "%d/%m/%Y", "%d/%m/%Y %H:%M:%S"]
         for fmt in formatos:
             try:
@@ -119,28 +123,28 @@ class Cadastro:
                     continue
 
                 encomenda = {
-                    "numEtiqueta": num_etq.strip(),
-                    "numCadastro": linha.get("numCadastro", "").strip(),
-                    "embalagem": linha.get("embalagem", "").strip(),
-                    "transportadora": linha.get("transportadora", "").strip(),
+                    "numEtiqueta": (linha.get("numEtiqueta") or "").strip(),
+                    "numCadastro": (linha.get("numCadastro") or "").strip(),
+                    "embalagem":   (linha.get("embalagem") or "").strip(),
+                    "transportadora": (linha.get("transportadora") or "").strip(),
                     "destinatario": {
-                        "nome": linha.get("destinatario_nome", "").strip(),
-                        "categoriaPublico": linha.get("destinatario_categoriaPublico", "").strip()
+                        "nome": (linha.get("destinatario_nome") or "").strip(),
+                        "categoriaPublico": (linha.get("destinatario_categoriaPublico") or "").strip(),
                     },
-                    "status": linha.get("status", "AGUARDANDO").strip(),
-                    "dataChegada": linha.get("dataChegada", "").strip(),
+                    "status": (linha.get("status") or "AGUARDANDO").strip(),
+                    "dataChegada": (linha.get("dataChegada") or "").strip(),
                     "retirada": {
-                        "retiradoPor": linha.get("retirada_retiradoPor", "").strip(),
-                        "parentesco": linha.get("retirada_parentesco", "").strip(),
-                        "statusRetirada": linha.get("retirada_statusRetirada", "PENDENTE").strip(),
-                        "autorizacaoEmail": linha.get("retirada_autorizacaoEmail", "NAO").strip(),
-                        "dataRetirada": linha.get("retirada_dataRetirada", "").strip()
+                        "retiradoPor": (linha.get("retirada_retiradoPor") or "").strip(),
+                        "parentesco":  (linha.get("retirada_parentesco") or "").strip(),
+                        "statusRetirada": (linha.get("retirada_statusRetirada") or "PENDENTE").strip(),
+                        "autorizacaoEmail": (linha.get("retirada_autorizacaoEmail") or "NAO").strip(),
+                        "dataRetirada": (linha.get("retirada_dataRetirada") or "").strip(),
                     },
                     "detalhamento": {
-                        "observacoes": linha.get("detalhamento_observacoes", "").strip(),
-                        "dataPrevistaChegada": linha.get("detalhamento_dataPrevistaChegada", "").strip(),
-                        "palavraChave": linha.get("detalhamento_palavraChave", "").strip()
-                    }
+                        "observacoes": (linha.get("detalhamento_observacoes") or "").strip(),
+                        "dataPrevistaChegada": (linha.get("detalhamento_dataPrevistaChegada") or "").strip(),
+                        "palavraChave": (linha.get("detalhamento_palavraChave") or "").strip(),
+                    },
                 }
                 encomendas.append(encomenda)
         return encomendas
@@ -287,7 +291,6 @@ class Cadastro:
         """Valida um pedido de encomenda (§7.5 adaptado ao domínio correios).
         Devolve lista de problemas."""
         problemas = []
-        # código repetido
         etq = str(pedido.get("numEtiqueta", "")).strip().upper()
         if not etq:
             problemas.append("Etiqueta vazia.")
@@ -343,27 +346,27 @@ class Cadastro:
                 cabecalho = leitor.fieldnames
                 
                 novos_campos_csv = {}
-                if "numCadastro" in novos_dados: novos_campos_csv["numCadastro"] = novos_dados["numCadastro"]
-                if "embalagem" in novos_dados: novos_campos_csv["embalagem"] = novos_dados["embalagem"]
-                if "transportadora" in novos_dados: novos_campos_csv["transportadora"] = novos_dados["transportadora"]
+                if "numCadastro" in novos_dados: novos_campos_csv["numCadastro"] = novos_dados["numCadastro"] or ""
+                if "embalagem" in novos_dados: novos_campos_csv["embalagem"] = novos_dados["embalagem"] or ""
+                if "transportadora" in novos_dados: novos_campos_csv["transportadora"] = novos_dados["transportadora"] or ""
                 if "destinatario" in novos_dados:
-                    dest = novos_dados["destinatario"]
-                    if "nome" in dest: novos_campos_csv["destinatario_nome"] = dest["nome"]
-                    if "categoriaPublico" in dest: novos_campos_csv["destinatario_categoriaPublico"] = dest["categoriaPublico"]
-                if "status" in novos_dados: novos_campos_csv["status"] = novos_dados["status"]
-                if "dataChegada" in novos_dados: novos_campos_csv["dataChegada"] = novos_dados["dataChegada"]
+                    dest = novos_dados["destinatario"] or ""
+                    if "nome" in dest: novos_campos_csv["destinatario_nome"] = dest["nome"] or ""
+                    if "categoriaPublico" in dest: novos_campos_csv["destinatario_categoriaPublico"] = dest["categoriaPublico"] or ""
+                if "status" in novos_dados: novos_campos_csv["status"] = novos_dados["status"] or ""
+                if "dataChegada" in novos_dados: novos_campos_csv["dataChegada"] = novos_dados["dataChegada"] or ""
                 if "retirada" in novos_dados:
-                    ret = novos_dados["retirada"]
-                    if "retiradoPor" in ret: novos_campos_csv["retirada_retiradoPor"] = ret["retiradoPor"]
-                    if "parentesco" in ret: novos_campos_csv["retirada_parentesco"] = ret["parentesco"]
-                    if "statusRetirada" in ret: novos_campos_csv["retirada_statusRetirada"] = ret["statusRetirada"]
-                    if "autorizacaoEmail" in ret: novos_campos_csv["retirada_autorizacaoEmail"] = ret["autorizacaoEmail"]
-                    if "dataRetirada" in ret: novos_campos_csv["retirada_dataRetirada"] = ret["dataRetirada"]
+                    ret = novos_dados["retirada"] or ""
+                    if "retiradoPor" in ret: novos_campos_csv["retirada_retiradoPor"] = ret["retiradoPor"] or ""
+                    if "parentesco" in ret: novos_campos_csv["retirada_parentesco"] = ret["parentesco"] or ""
+                    if "statusRetirada" in ret: novos_campos_csv["retirada_statusRetirada"] = ret["statusRetirada"] or ""
+                    if "autorizacaoEmail" in ret: novos_campos_csv["retirada_autorizacaoEmail"] = ret["autorizacaoEmail"] or ""
+                    if "dataRetirada" in ret: novos_campos_csv["retirada_dataRetirada"] = ret["dataRetirada"] or ""
                 if "detalhamento" in novos_dados:
-                    det = novos_dados["detalhamento"]
-                    if "observacoes" in det: novos_campos_csv["detalhamento_observacoes"] = det["observacoes"]
-                    if "dataPrevistaChegada" in det: novos_campos_csv["detalhamento_dataPrevistaChegada"] = det["dataPrevistaChegada"]
-                    if "palavraChave" in det: novos_campos_csv["detalhamento_palavraChave"] = det["palavraChave"]
+                    det = novos_dados["detalhamento"] or ""
+                    if "observacoes" in det: novos_campos_csv["detalhamento_observacoes"] = det["observacoes"] or ""
+                    if "dataPrevistaChegada" in det: novos_campos_csv["detalhamento_dataPrevistaChegada"] = det["dataPrevistaChegada"] or ""
+                    if "palavraChave" in det: novos_campos_csv["detalhamento_palavraChave"] = det["palavraChave"] or ""
 
                 for linha in leitor:
                     if linha.get("numEtiqueta") == identificador:

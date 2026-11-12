@@ -18,8 +18,7 @@
     "prioridade": 1,
     "local": "estoque_correios",
     "observacoesRecurso": "Espaço reservado para itens institucionais urgentes de tamanho médio/pequeno.",
-    "itemVinculado": [
-    ]
+    "itemVinculado": []
   },
   {
     "codigoRecurso": "PRAT-P2-01",
@@ -57,7 +56,9 @@
     "capacidade": 25,
     "local": "estoque_correios",
     "observacoesRecurso": "Destinado ao corpo docente e administrativo.",
-    "itemVinculado": []
+    "itemVinculado": [
+      "ETQ-2026-0003"
+    ]
   },
   {
     "codigoRecurso": "PRAT-P4-01",
@@ -77,7 +78,6 @@
     "capacidade": 40,
     "local": "estoque_correios",
     "observacoesRecurso": "Encomendas gerais sem urgência imediata de retenção.",
-    "itemVinculado": [
-    ]
+    "itemVinculado": []
   }
 ]
